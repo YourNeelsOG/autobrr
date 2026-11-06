@@ -1605,7 +1605,11 @@ func (repo *ReleaseRepo) CheckIsDuplicateRelease(ctx context.Context, profile *d
 		Where("ras.status = 'PUSH_APPROVED'")
 
 	if profile.ReleaseName && profile.Hash {
-		//queryBuilder = queryBuilder.Where(repo.db.ILike("r.torrent_name", release.TorrentName))
+		// Exact Release matches on the release name and the normalized hash together.
+		// The hash alone can collide between different releases: anime with absolute
+		// episode numbering has no season, so every episode shares one normalized title
+		// and hash, and the release name is what keeps them apart.
+		queryBuilder = queryBuilder.Where(repo.db.ILike("r.torrent_name", release.TorrentName))
 		queryBuilder = queryBuilder.Where(sq.Eq{"r.normalized_hash": release.NormalizedHash})
 	} else {
 		if profile.Title {
@@ -1614,11 +1618,6 @@ func (repo *ReleaseRepo) CheckIsDuplicateRelease(ctx context.Context, profile *d
 
 		if profile.SubTitle {
 			queryBuilder = queryBuilder.Where(repo.db.ILike("r.sub_title", release.SubTitle))
-		}
-
-		if profile.ReleaseName && profile.Hash {
-			//queryBuilder = queryBuilder.Where(repo.db.ILike("r.torrent_name", release.TorrentName))
-			queryBuilder = queryBuilder.Where(sq.Eq{"r.normalized_hash": release.NormalizedHash})
 		}
 
 		if profile.Year {

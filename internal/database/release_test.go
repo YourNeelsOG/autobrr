@@ -1708,6 +1708,34 @@ func TestReleaseRepo_CheckIsDuplicateRelease(t *testing.T) {
 				},
 				isDuplicate: true,
 			},
+			{
+				// https://github.com/autobrr/autobrr/issues/2705
+				// Anime with absolute episode numbering has no season, so the normalized
+				// hash drops the episode and collides across episodes. The Exact Release
+				// profile compares the release name together with the hash, so a different
+				// episode must not be treated as a duplicate.
+				name: "40",
+				fields: fields{
+					releaseTitles: []string{
+						"[SubsPlease] Ascendance of a Bookworm - 22 [2026][Web][MKV][h264][1080p][AAC 2.0]",
+					},
+					releaseTitle: "[SubsPlease] Ascendance of a Bookworm - 23 [2026][Web][MKV][h264][1080p][AAC 2.0]",
+					profile:      &domain.DuplicateReleaseProfile{ReleaseName: true, Hash: true},
+				},
+				isDuplicate: false,
+			},
+			{
+				// The same release announced again is a duplicate under the Exact Release profile.
+				name: "41",
+				fields: fields{
+					releaseTitles: []string{
+						"[SubsPlease] Ascendance of a Bookworm - 23 [2026][Web][MKV][h264][1080p][AAC 2.0]",
+					},
+					releaseTitle: "[SubsPlease] Ascendance of a Bookworm - 23 [2026][Web][MKV][h264][1080p][AAC 2.0]",
+					profile:      &domain.DuplicateReleaseProfile{ReleaseName: true, Hash: true},
+				},
+				isDuplicate: true,
+			},
 		}
 
 		for _, tt := range tests {
